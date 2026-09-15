@@ -14,10 +14,20 @@ android {
         versionName '0.2.0'
     }
 
+    signingConfigs {
+        stableDebug {
+            storeFile rootProject.file('.ci/tsf-debug.keystore')
+            storePassword 'tsfreborn'
+            keyAlias 'tsfdebug'
+            keyPassword 'tsfreborn'
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix '.debug'
             versionNameSuffix '-debug'
+            signingConfig signingConfigs.stableDebug
         }
         release {
             minifyEnabled false
