@@ -73,10 +73,10 @@ public final class MainActivity extends Activity implements
     private void configureWindow() {
         Window w = getWindow();
 
-        // Force fullscreen before the content view is measured. Some OEM
-        // builds keep a status-bar-sized content inset if fullscreen is only
-        // requested later through WindowInsetsController.
-        w.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // TSF-style system bars: status bar stays visible and transparent while
+        // the launcher background is laid out underneath it.
+        w.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        w.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         w.setStatusBarColor(Color.TRANSPARENT);
         w.setNavigationBarColor(Color.BLACK);
 
@@ -89,38 +89,41 @@ public final class MainActivity extends Activity implements
 
         if (Build.VERSION.SDK_INT >= 30) {
             w.setDecorFitsSystemWindows(false);
+        } else {
+            w.getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            );
         }
-
-        w.getDecorView().setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_FULLSCREEN |
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        );
     }
 
-    private void hideStatusBar() {
+    private void showStatusBar() {
         if (Build.VERSION.SDK_INT >= 30) {
             View decor = getWindow().getDecorView();
             WindowInsetsController controller = decor.getWindowInsetsController();
             if (controller != null) {
-                controller.hide(WindowInsets.Type.statusBars());
-                controller.setSystemBarsBehavior(
-                        WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                controller.show(WindowInsets.Type.statusBars());
+                controller.setSystemBarsAppearance(
+                        0, WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
             }
+        } else {
+            getWindow().getDecorView().setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+            );
         }
     }
 
     @Override public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) hideStatusBar();
+        if (hasFocus) showStatusBar();
     }
 
     private void buildUi() {
         root = new FrameLayout(this);
         root.setBackgroundColor(Color.TRANSPARENT);
         setContentView(root);
-        root.post(this::hideStatusBar);
+        root.post(this::showStatusBar);
 
         pager = new WorkspacePager(this);
         pager.setListener(this);
@@ -176,16 +179,29 @@ public final class MainActivity extends Activity implements
                 FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
 
         root.setOnApplyWindowInsetsListener((v, insets) -> {
+            int statusTop = 0;
             int navBottom = 0;
             if (Build.VERSION.SDK_INT >= 30) {
+                statusTop = insets.getInsets(WindowInsets.Type.statusBars()).top;
                 navBottom = insets.getInsets(WindowInsets.Type.navigationBars()).bottom;
             }
+
             FrameLayout.LayoutParams p1 = (FrameLayout.LayoutParams) drawerButton.getLayoutParams();
             p1.bottomMargin = navBottom + dp(18);
             drawerButton.setLayoutParams(p1);
+
             FrameLayout.LayoutParams p2 = (FrameLayout.LayoutParams) pageIndicator.getLayoutParams();
             p2.bottomMargin = navBottom + dp(90);
             pageIndicator.setLayoutParams(p2);
+
+            FrameLayout.LayoutParams p3 = (FrameLayout.LayoutParams) removeZone.getLayoutParams();
+            p3.topMargin = statusTop + dp(12);
+            removeZone.setLayoutParams(p3);
+
+            FrameLayout.LayoutParams p4 = (FrameLayout.LayoutParams) editBar.getLayoutParams();
+            p4.topMargin = statusTop + dp(8);
+            editBar.setLayoutParams(p4);
+
             return insets;
         });
 
