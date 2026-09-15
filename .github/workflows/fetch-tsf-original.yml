@@ -1,0 +1,22 @@
+name: Fetch TSF 3.9.4 Original
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-tsf-original.yml'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download original TSF 3.9.4
+        run: |
+          curl -fL --retry 3 -A 'Mozilla/5.0' 'https://d.apkpure.net/b/APK/com.tsf.shell?version=latest' -o TSF_3.9.4_ORIGINAL.apk
+          ls -lh TSF_3.9.4_ORIGINAL.apk
+          sha256sum TSF_3.9.4_ORIGINAL.apk
+      - name: Upload original APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TSF-3.9.4-original
+          path: TSF_3.9.4_ORIGINAL.apk
