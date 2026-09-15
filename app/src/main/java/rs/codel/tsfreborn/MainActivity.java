@@ -72,19 +72,31 @@ public final class MainActivity extends Activity implements
 
     private void configureWindow() {
         Window w = getWindow();
+
+        // Force fullscreen before the content view is measured. Some OEM
+        // builds keep a status-bar-sized content inset if fullscreen is only
+        // requested later through WindowInsetsController.
+        w.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         w.setStatusBarColor(Color.TRANSPARENT);
         w.setNavigationBarColor(Color.BLACK);
-        if (Build.VERSION.SDK_INT >= 30) {
-            // Configure edge-to-edge here, but do not ask the Window for its
-            // InsetsController before the decor view has been attached.
-            w.setDecorFitsSystemWindows(false);
-        } else {
-            w.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            w.getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
-                    View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-            );
+
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams attrs = w.getAttributes();
+            attrs.layoutInDisplayCutoutMode =
+                    WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            w.setAttributes(attrs);
         }
+
+        if (Build.VERSION.SDK_INT >= 30) {
+            w.setDecorFitsSystemWindows(false);
+        }
+
+        w.getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        );
     }
 
     private void hideStatusBar() {
