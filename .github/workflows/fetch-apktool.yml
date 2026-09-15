@@ -1,0 +1,22 @@
+name: Fetch Apktool
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fetch-apktool.yml'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download apktool
+        run: |
+          curl -fL --retry 3 'https://repo1.maven.org/maven2/org/apktool/apktool-cli/2.9.3/apktool-cli-2.9.3-all.jar' -o apktool.jar
+          ls -lh apktool.jar
+          java -jar apktool.jar --version
+      - name: Upload apktool
+        uses: actions/upload-artifact@v4
+        with:
+          name: apktool-2.9.3
+          path: apktool.jar
