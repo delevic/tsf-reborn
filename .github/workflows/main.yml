@@ -52,6 +52,19 @@ jobs:
           git commit -m "Bootstrap TSF Reborn source tree" || true
           git push
 
+      - name: Apply source migrations
+        run: |
+          if [ -f scripts/apply_topfix.py ]; then
+            python3 scripts/apply_topfix.py
+            if ! git diff --quiet; then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git add app/src/main/java/rs/codel/tsfreborn/MainActivity.java app/src/main/res/values/styles.xml
+              git commit -m "Apply fullscreen topfix"
+              git push
+            fi
+          fi
+
       - name: Build debug APK
         run: gradle assembleDebug
 
