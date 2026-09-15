@@ -65,6 +65,10 @@ jobs:
             fi
           fi
 
+      - name: Prepare stable debug signing key
+        run: |
+          base64 -d .ci/tsf-debug.keystore.b64 > .ci/tsf-debug.keystore
+
       - name: Build debug APK
         run: gradle assembleDebug
 
